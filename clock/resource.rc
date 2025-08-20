@@ -1,13 +1,11 @@
 #include <windows.h>
 #include "Resource.h"
-
 IDI_CLOCK       ICON    "clock.ico"
 IDI_SMALL       ICON    "small.ico"
 IDR_NOTIFICATION RCDATA  "..\\gamemus.wav"
 
 /////////////////////////////////////////////////////////////////////////////
 // Диалог установки времени
-
 IDD_SET_TIME DIALOGEX 0, 0, 200, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Настройка времени"
@@ -23,7 +21,6 @@ END
 // Диалог "О программе"
 
 IDD_ABOUT DIALOGEX 0, 0, 250, 120
-STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "О программе"
 FONT 9, "Segoe UI"
 BEGIN
@@ -31,4 +28,3 @@ BEGIN
     LTEXT   "Игровые часы", IDC_ABOUT_TEXT, 50, 15, 190, 20
     DEFPUSHBUTTON "Закрыть", IDOK, 90, 80, 70, 14
 END
-

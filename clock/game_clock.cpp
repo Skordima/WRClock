@@ -40,7 +40,6 @@ struct Theme {
     COLORREF buttonText;
     COLORREF accent;
 };
-
 const Theme LIGHT_THEME{ RGB(250,250,250), RGB(0,0,0),   RGB(230,230,230), RGB(0,0,0),   RGB(0,120,215) };
 const Theme DARK_THEME { RGB(32,32,32),   RGB(255,255,255), RGB(60,60,60),  RGB(255,255,255), RGB(0,120,215) };
 
@@ -85,13 +84,12 @@ INT_PTR CALLBACK AboutDlg(HWND, UINT, WPARAM, LPARAM);
 // -----------------------------------------------------------------------------
 ULONGLONG GetTime100ns()
 {
-    FILETIME ft; GetSystemTimeAsFileTime(&ft);
+      FILETIME ft; GetSystemTimeAsFileTime(&ft);
     return (static_cast<ULONGLONG>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime;
 }
-
 std::wstring FormatTime(int minutes)
 {
-    int h = (minutes / 60) % 24;
+      int h = (minutes / 60) % 24;
     int m = minutes % 60;
     std::wostringstream ss;
     ss << std::setw(2) << std::setfill(L'0') << h
@@ -99,26 +97,24 @@ std::wstring FormatTime(int minutes)
        << std::setw(2) << std::setfill(L'0') << m;
     return ss.str();
 }
-
 // -----------------------------------------------------------------------------
 // Работа с INI файлом в AppData
 // -----------------------------------------------------------------------------
 std::wstring GetIniPath()
 {
-    wchar_t path[MAX_PATH];
+      wchar_t path[MAX_PATH];
     if (SUCCEEDED(SHGetFolderPath(nullptr, CSIDL_APPDATA | CSIDL_FLAG_CREATE,
                                   nullptr, 0, path)))
     {
-        std::wstring dir = std::wstring(path) + L"\\WRClock";
+              std::wstring dir = std::wstring(path) + L"\\WRClock";
         CreateDirectory(dir.c_str(), nullptr);
         return dir + L"\\gameclock.ini";
     }
-    return L"gameclock.ini";
+      return L"gameclock.ini";
 }
-
 void SaveGameTime()
 {
-    ULONGLONG now100 = GetTime100ns();
+      ULONGLONG now100 = GetTime100ns();
     double elapsed = (now100 - g_start) / 10000000.0; // сек
     double gameMin = (elapsed + g_offset) / GAME_MINUTE_REAL_SECONDS;
     int    gameInt = static_cast<int>(gameMin);
@@ -130,10 +126,9 @@ void SaveGameTime()
     swprintf(buf, 64, L"%llu", now100);
     WritePrivateProfileString(L"Game", L"CloseTime", buf, ini.c_str());
 }
-
 void LoadGameTime()
 {
-    wchar_t buf[64] = {0};
+      wchar_t buf[64] = {0};
     std::wstring ini = GetIniPath();
     int storedGame = 0;
     ULONGLONG storedClose = 0;
@@ -145,24 +140,23 @@ void LoadGameTime()
     ULONGLONG now = GetTime100ns();
     if (storedClose > 0 && now > storedClose)
     {
-        double realElapsed = (now - storedClose) / 10000000.0;
+              double realElapsed = (now - storedClose) / 10000000.0;
         double additional = realElapsed / GAME_MINUTE_REAL_SECONDS;
         g_offset = (storedGame + additional) * GAME_MINUTE_REAL_SECONDS;
     }
     else
     {
-        SYSTEMTIME st; GetLocalTime(&st);
+              SYSTEMTIME st; GetLocalTime(&st);
         int sysMinutes = st.wHour * 60 + st.wMinute;
         g_offset = sysMinutes * GAME_MINUTE_REAL_SECONDS;
-    }
+          }
 }
-
 // -----------------------------------------------------------------------------
 // Темизация
 // -----------------------------------------------------------------------------
 void ApplyTheme(HWND hwnd)
 {
-    if (g_brBackground) DeleteObject(g_brBackground);
+      if (g_brBackground) DeleteObject(g_brBackground);
     g_brBackground = CreateSolidBrush(g_theme.bg);
 
     BOOL useDark = g_dark ? TRUE : FALSE;
@@ -237,15 +231,15 @@ INT_PTR CALLBACK SetTimeDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM)
     switch (msg)
     {
     case WM_INITDIALOG:
-        ApplyTheme(hDlg);
+                ApplyTheme(hDlg);
         return TRUE;
     case WM_CTLCOLORDLG:
-        return (INT_PTR)g_brBackground;
+                return (INT_PTR)g_brBackground;
     case WM_CTLCOLORSTATIC:
     case WM_CTLCOLOREDIT:
-    case WM_CTLCOLORBTN:
+            case WM_CTLCOLORBTN:
     {
-        HDC hdc = (HDC)wParam;
+              HDC hdc = (HDC)wParam;
         SetBkColor(hdc, g_theme.bg);
         SetTextColor(hdc, g_theme.text);
         return (INT_PTR)g_brBackground;
@@ -253,61 +247,59 @@ INT_PTR CALLBACK SetTimeDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM)
     case WM_COMMAND:
         if (LOWORD(wParam) == IDOK)
         {
-            wchar_t buf[16];
+                      wchar_t buf[16];
             GetWindowText(GetDlgItem(hDlg, IDC_EDIT_TIME), buf, 16);
             int h,m;
             if (swscanf(buf, L"%d%*[^0-9]%d", &h, &m) == 2 &&
                 h >=0 && h <24 && m>=0 && m<60)
             {
-                g_start = GetTime100ns();
+                              g_start = GetTime100ns();
                 g_offset = (h*60 + m) * GAME_MINUTE_REAL_SECONDS;
                 EndDialog(hDlg, IDOK);
                 return TRUE;
             }
-            MessageBox(hDlg, L"Неверный формат времени", L"Ошибка", MB_OK | MB_ICONERROR);
+                      MessageBox(hDlg, L"Неверный формат времени", L"Ошибка", MB_OK | MB_ICONERROR);
             return TRUE;
         }
         else if (LOWORD(wParam) == IDCANCEL)
         {
             EndDialog(hDlg, IDCANCEL);
-            return TRUE;
+                      return TRUE;
         }
         break;
     }
-    return FALSE;
+      return FALSE;
 }
-
 // -----------------------------------------------------------------------------
 // Диалог "О программе"
 // -----------------------------------------------------------------------------
 INT_PTR CALLBACK AboutDlg(HWND hDlg, UINT msg, WPARAM wParam, LPARAM)
 {
-    switch (msg)
+      switch (msg)
     {
     case WM_INITDIALOG:
-        ApplyTheme(hDlg);
+                  ApplyTheme(hDlg);
         return TRUE;
     case WM_CTLCOLORDLG:
         return (INT_PTR)g_brBackground;
     case WM_CTLCOLORSTATIC:
     case WM_CTLCOLORBTN:
     {
-        HDC hdc = (HDC)wParam;
+              HDC hdc = (HDC)wParam;
         SetBkColor(hdc, g_theme.bg);
         SetTextColor(hdc, g_theme.text);
         return (INT_PTR)g_brBackground;
     }
-    case WM_COMMAND:
-        if (LOWORD(wParam) == IDOK)
+              case WM_COMMAND:
+                  if (LOWORD(wParam) == IDOK)
         {
-            EndDialog(hDlg, IDOK);
+                                EndDialog(hDlg, IDOK);
             return TRUE;
         }
         break;
     }
-    return FALSE;
+      return FALSE;
 }
-
 // -----------------------------------------------------------------------------
 // Основная оконная процедура
 // -----------------------------------------------------------------------------
@@ -317,26 +309,22 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
     case WM_CREATE:
     {
-        g_hInst = ((LPCREATESTRUCT)lParam)->hInstance;
+              g_hInst = ((LPCREATESTRUCT)lParam)->hInstance;
         g_start = GetTime100ns();
         LoadGameTime();
-
-        g_fontLarge = CreateFont(36,0,0,0,FW_BOLD,FALSE,FALSE,FALSE,
+              g_fontLarge = CreateFont(36,0,0,0,FW_BOLD,FALSE,FALSE,FALSE,
                                  DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,
                                  CLEARTYPE_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Segoe UI");
         g_fontSmall = CreateFont(18,0,0,0,FW_NORMAL,FALSE,FALSE,FALSE,
                                  DEFAULT_CHARSET,OUT_DEFAULT_PRECIS,CLIP_DEFAULT_PRECIS,
                                  CLEARTYPE_QUALITY,DEFAULT_PITCH|FF_SWISS,L"Segoe UI");
-
-        g_hTime = CreateWindow(L"STATIC", L"00:00", WS_CHILD|WS_VISIBLE|SS_CENTER,
+              g_hTime = CreateWindow(L"STATIC", L"00:00", WS_CHILD|WS_VISIBLE|SS_CENTER,
                                10,10,230,40, hwnd, nullptr, g_hInst, nullptr);
         SendMessage(g_hTime, WM_SETFONT, (WPARAM)g_fontLarge, TRUE);
-
-        g_hCountdown = CreateWindow(L"STATIC", L"", WS_CHILD|WS_VISIBLE|SS_CENTER,
+              g_hCountdown = CreateWindow(L"STATIC", L"", WS_CHILD|WS_VISIBLE|SS_CENTER,
                                     10,60,230,20, hwnd, nullptr, g_hInst, nullptr);
         SendMessage(g_hCountdown, WM_SETFONT, (WPARAM)g_fontSmall, TRUE);
-
-        g_hRealCountdown = CreateWindow(L"STATIC", L"", WS_CHILD|WS_VISIBLE|SS_CENTER,
+              g_hRealCountdown = CreateWindow(L"STATIC", L"", WS_CHILD|WS_VISIBLE|SS_CENTER,
                                         10,85,230,20, hwnd, nullptr, g_hInst, nullptr);
         SendMessage(g_hRealCountdown, WM_SETFONT, (WPARAM)g_fontSmall, TRUE);
 
@@ -357,12 +345,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         SetTimer(hwnd, 1, 1000, nullptr);
         return 0;
     }
-    case WM_TIMER:
+            case WM_TIMER:
         UpdateClock();
         return 0;
     case WM_CTLCOLORSTATIC:
     {
-        HDC hdc = (HDC)wParam;
+              HDC hdc = (HDC)wParam;
         SetBkColor(hdc, g_theme.bg);
         SetTextColor(hdc, g_theme.text);
         return (LRESULT)g_brBackground;
@@ -373,20 +361,20 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         DrawButton((LPDRAWITEMSTRUCT)lParam);
         return TRUE;
     case WM_COMMAND:
-        switch (LOWORD(wParam))
+                switch (LOWORD(wParam))
         {
         case IDC_SET_TIME:
-            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SET_TIME), hwnd, SetTimeDlg);
+                                DialogBox(g_hInst, MAKEINTRESOURCE(IDD_SET_TIME), hwnd, SetTimeDlg);
             UpdateClock();
             break;
         case IDC_CLIP:
-        {
+                            {
             int len = GetWindowTextLength(g_hTime);
             std::wstring txt(len, L'\0');
             GetWindowText(g_hTime, txt.data(), len+1);
             if (OpenClipboard(hwnd))
             {
-                EmptyClipboard();
+                              EmptyClipboard();
                 size_t size = (txt.size()+1)*sizeof(wchar_t);
                 HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, size);
                 memcpy(GlobalLock(hMem), txt.c_str(), size);
@@ -394,7 +382,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 SetClipboardData(CF_UNICODETEXT, hMem);
                 CloseClipboard();
             }
-            break;
+                                          break;
         }
         case IDC_THEME_SWITCH:
             g_dark = !g_dark;
@@ -403,8 +391,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             ApplyTheme(hwnd);
             break;
         case IDC_ABOUT:
-            DialogBox(g_hInst, MAKEINTRESOURCE(IDD_ABOUT), hwnd, AboutDlg);
-            break;
+                                break;
         }
         return 0;
     case WM_ERASEBKGND:
@@ -413,24 +400,23 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         FillRect((HDC)wParam, &rc, g_brBackground);
         return 1;
     }
-    case WM_DESTROY:
-        KillTimer(hwnd,1);
-        SaveGameTime();
-        if (g_brBackground) DeleteObject(g_brBackground);
+            case WM_DESTROY:
+                KillTimer(hwnd,1);
+                SaveGameTime();
+                if (g_brBackground) DeleteObject(g_brBackground);
         if (g_fontLarge) DeleteObject(g_fontLarge);
         if (g_fontSmall) DeleteObject(g_fontSmall);
         PostQuitMessage(0);
-        return 0;
+                return 0;
     }
-    return DefWindowProc(hwnd,msg,wParam,lParam);
+      return DefWindowProc(hwnd,msg,wParam,lParam);
 }
-
 // -----------------------------------------------------------------------------
 // Точка входа
 // -----------------------------------------------------------------------------
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
 {
-    const wchar_t CLASS_NAME[] = L"WRClockWindow";
+      const wchar_t CLASS_NAME[] = L"WRClockWindow";
     WNDCLASSEX wc{ sizeof(WNDCLASSEX) };
     wc.lpfnWndProc   = WndProc;
     wc.hInstance     = hInstance;
@@ -439,7 +425,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
     wc.hIconSm       = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_SMALL));
     wc.hbrBackground = (HBRUSH)(COLOR_WINDOW+1);
     wc.lpszClassName = CLASS_NAME;
-    RegisterClassEx(&wc);
+      RegisterClassEx(&wc);
 
     HWND hwnd = CreateWindowEx(0, CLASS_NAME, L"Игровые часы",
         WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
@@ -451,11 +437,14 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE, LPWSTR, int nCmdShow)
     UpdateWindow(hwnd);
 
     MSG msg;
-    while (GetMessage(&msg, nullptr, 0, 0))
+      while (GetMessage(&msg, nullptr, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessage(&msg);
     }
     return (int)msg.wParam;
 }
+
+
+
 
