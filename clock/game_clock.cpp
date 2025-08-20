@@ -17,30 +17,30 @@
 #pragma comment(lib, "winmm.lib")
 #pragma comment(lib, "shell32.lib")
 
-// Declaraciones previas de funciones
+// Предварительные объявления функций
 void UpdateFonts(int newHeight);
 void ResizeChildControls(HWND hwnd, int newWidth, int newHeight);
 INT_PTR CALLBACK SetTimeDlgProc(HWND, UINT, WPARAM, LPARAM);
-INT_PTR CALLBACK AboutDlgProc(HWND, UINT, WPARAM, LPARAM); // nuevo procedimiento de diálogo "Acerca de la aplicación"
+INT_PTR CALLBACK AboutDlgProc(HWND, UINT, WPARAM, LPARAM); // новая процедура диалога «О программе»
 ULONGLONG GetSystemTimeULongLong();
 
-// Identificadores de temporizador y botones
+// Идентификаторы таймера и кнопок
 #define IDT_TIMER       1
 #define IDC_SET_TIME    101
 #define IDC_CLIP        102
 
-// Constantes de conversión de tiempo:
-// 1 minuto de juego = 8.75 segundos de tiempo real
-// 1 hora de juego = 525 segundos de tiempo real (8.75*60)
-// 1 día de juego = 12600 segundos de tiempo real (525*24)
+// Константы преобразования времени:
+// 1 игровая минута = 8.75 секунд реального времени
+// 1 игровый час = 525 секунд реального времени (8.75*60)
+// 1 игровой день = 12600 секунд реального времени (525*24)
 const double GAME_MINUTE_REAL_SECONDS = 8.75;
 const int MINUTES_IN_DAY = 1440;
 
-// Tamaños del área del cliente
+// Размеры клиентской области
 const int BASE_WIDTH = 250;
 const int BASE_HEIGHT = 210;
 
-// Estructura para la disposición de controles
+// Структура размещения элементов управления
 struct ControlLayout {
     int x, y, width, height;
 };
@@ -50,27 +50,27 @@ const ControlLayout LAYOUT_COUNTDOWN = { 10, 90, 235, 20 };
 const ControlLayout LAYOUT_REALCOUNTDOWN = { 10, 115, 230, 20 };
 const ControlLayout LAYOUT_SETTIME = { 10, 145, 230, 25 };
 const ControlLayout LAYOUT_CLIP = { BASE_WIDTH - 35, 5, 30, 30 };
-// Diseño para el botón "Acerca de la aplicación"
+// Размещение кнопки «О программе»
 const ControlLayout LAYOUT_ABOUT = { 10, 180, 230, 25 };
 
-// Variables globales de controles
+// Глобальные переменные элементов управления
 HWND hTimeLabel, hCountdownLabel, hRealCountdownLabel, hSetTimeButton, hClipButton, hAboutButton;
-double g_offset = 0.0;       // desplazamiento en segundos para el cálculo del tiempo de juego
-ULONGLONG g_realStart = 0;   // momento de inicio (en unidades de 100 ns)
+double g_offset = 0.0;       // смещение в секундах для расчёта игрового времени
+ULONGLONG g_realStart = 0;   // момент запуска (в единицах 100 нс)
 int g_lastBeepMarker = -1;
 bool g_alwaysOnTop = false;
 
-// Pinceles y fuentes globales
+// Глобальные кисти и шрифты
 HBRUSH hBrushBackground = NULL;
 HFONT g_hFontLarge = NULL;
 HFONT g_hFontMedium = NULL;
 HFONT g_hFontSmall = NULL;
 
-// Variable global para el recurso extraído (WAV)
+// Глобальная переменная для извлечённого ресурса (WAV)
 std::wstring g_notificationTempPath = L"";
 
 //
-// Función para obtener la hora del sistema como ULONGLONG (FILETIME, unidades de 100 ns)
+// Функция для получения системного времени как ULONGLONG (FILETIME, единицы 100 нс)
 //
 ULONGLONG GetSystemTimeULongLong()
 {
@@ -80,12 +80,12 @@ ULONGLONG GetSystemTimeULongLong()
 }
 
 //
-// Registro de mensajes en el archivo log.txt
+// Запись сообщений в файл log.txt
 //
 #ifndef NDEBUG
 void LogMessage(const std::wstring& message)
 {
-    // En compilación Debug, escribimos el log
+    // В режиме Debug записываем журнал
     std::wofstream logFile("log.txt", std::ios::app);
     if (logFile)
     {
@@ -97,12 +97,12 @@ void LogMessage(const std::wstring& message)
     }
 }
 #else
-// En compilación Release, la función no hace nada
+// В режиме Release функция ничего не делает
 void LogMessage(const std::wstring& message) {}
 #endif
 
 //
-// Formateo de tiempo (HH:MM)
+// Форматирование времени (HH:MM)
 //
 std::wstring FormatTime(int totalMinutes)
 {
@@ -115,48 +115,48 @@ std::wstring FormatTime(int totalMinutes)
 }
 
 //
-// Extracción del recurso a un archivo temporal
+// Извлечение ресурса во временный файл
 //
 std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR lpType)
 {
     HRSRC hRes = FindResource(hInst, lpName, lpType);
     if (!hRes)
     {
-        LogMessage(L"FindResource falló");
+        LogMessage(L"FindResource завершилась неудачно");
         return L"";
     }
     DWORD size = SizeofResource(hInst, hRes);
     HGLOBAL hResData = LoadResource(hInst, hRes);
     if (!hResData)
     {
-        LogMessage(L"LoadResource falló");
+        LogMessage(L"LoadResource завершилась неудачно");
         return L"";
     }
     LPVOID pResData = LockResource(hResData);
     if (!pResData)
     {
-        LogMessage(L"LockResource falló");
+        LogMessage(L"LockResource завершилась неудачно");
         return L"";
     }
 
     TCHAR tempPath[MAX_PATH];
     if (!GetTempPath(MAX_PATH, tempPath))
     {
-        LogMessage(L"GetTempPath falló");
+        LogMessage(L"GetTempPath завершилась неудачно");
         return L"";
     }
 
     TCHAR tempFileName[MAX_PATH];
     if (!GetTempFileName(tempPath, _T("WAV"), 0, tempFileName))
     {
-        LogMessage(L"GetTempFileName falló");
+        LogMessage(L"GetTempFileName завершилась неудачно");
         return L"";
     }
 
     HANDLE hFile = CreateFile(tempFileName, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        LogMessage(L"CreateFile falló");
+        LogMessage(L"CreateFile завершилась неудачно");
         return L"";
     }
 
@@ -164,13 +164,10 @@ std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR 
     WriteFile(hFile, pResData, size, &written, NULL);
     CloseHandle(hFile);
 
-    LogMessage(std::wstring(L"Recurso extraído a ") + tempFileName);
+    LogMessage(std::wstring(L"Ресурс извлечён в ") + tempFileName);
     return std::wstring(tempFileName);
 }
 
-//
-// Obtiene la ruta al archivo INI dentro de la carpeta AppData del usuario
-//
 std::wstring GetIniFilePath()
 {
     TCHAR appDataPath[MAX_PATH];
@@ -183,14 +180,11 @@ std::wstring GetIniFilePath()
     return L"gameclock.ini";
 }
 
-//
-// Guardar el tiempo de juego en el archivo INI (gameclock.ini)
-//
 void SaveGameTime()
 {
     ULONGLONG closeTime = GetSystemTimeULongLong();
-    double elapsed = (closeTime - g_realStart) / 10000000.0; // segundos reales
-    double gameTime = (elapsed + g_offset) / GAME_MINUTE_REAL_SECONDS; // minutos de juego
+    double elapsed = (closeTime - g_realStart) / 10000000.0; // реальные секунды
+    double gameTime = (elapsed + g_offset) / GAME_MINUTE_REAL_SECONDS; // игровые минуты
     int gameTimeInt = (int)gameTime;
 
     TCHAR buffer[64];
@@ -201,11 +195,11 @@ void SaveGameTime()
     _stprintf_s(buffer, _T("%I64u"), closeTime);
     WritePrivateProfileString(_T("Game"), _T("CloseTime"), buffer, iniPath.c_str());
 
-    LogMessage(L"Tiempo de juego guardado.");
+    LogMessage(L"Игровое время сохранено.");
 }
 
 //
-// Cargar el tiempo de juego desde el archivo INI
+// Загрузка игрового времени из INI-файла
 //
 void LoadGameTime()
 {
@@ -225,25 +219,25 @@ void LoadGameTime()
     ULONGLONG currentTime = GetSystemTimeULongLong();
     if (storedCloseTime > 0 && currentTime > storedCloseTime)
     {
-        double realElapsed = (currentTime - storedCloseTime) / 10000000.0; // segundos reales
+        double realElapsed = (currentTime - storedCloseTime) / 10000000.0; // реальные секунды
         double additionalGameMinutes = realElapsed / GAME_MINUTE_REAL_SECONDS;
         double newGameTime = storedGameTime + additionalGameMinutes;
         g_offset = newGameTime * GAME_MINUTE_REAL_SECONDS;
-        LogMessage(L"Tiempo de juego cargado desde la configuración INI.");
+        LogMessage(L"Игровое время загружено из INI.");
     }
     else
     {
-        // Si no hay datos, establecer el tiempo de juego igual al tiempo del sistema (en minutos)
+        // Если данных нет, устанавливаем игровое время равным системному (в минутах)
         SYSTEMTIME st;
         GetLocalTime(&st);
         int sysMinutes = st.wHour * 60 + st.wMinute;
         g_offset = sysMinutes * GAME_MINUTE_REAL_SECONDS;
-        LogMessage(L"No se encontró tiempo de juego guardado; usando el tiempo del sistema.");
+        LogMessage(L"Сохранённое игровое время не найдено; используется системное время.");
     }
 }
 
 //
-// Procedimiento de diálogo para establecer manualmente el tiempo de juego
+// Диалоговая процедура для ручной установки игрового времени
 //
 INT_PTR CALLBACK SetTimeDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -251,7 +245,7 @@ INT_PTR CALLBACK SetTimeDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
     switch (message)
     {
     case WM_INITDIALOG:
-        SetWindowText(hDlg, _T("Configuración del tiempo de juego"));
+        SetWindowText(hDlg, _T("Настройка игрового времени"));
         hEdit = GetDlgItem(hDlg, IDC_EDIT_TIME);
         {
             HWND hOk = GetDlgItem(hDlg, IDOK);
@@ -294,7 +288,7 @@ INT_PTR CALLBACK SetTimeDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                 if (hours >= 0 && hours < 24 && minutes >= 0 && minutes < 60)
                 {
                     int desiredTotalMinutes = hours * 60 + minutes;
-                    // Reiniciamos la marca de tiempo base, para que al ingresar, por ejemplo, 20:00, se muestre inmediatamente 20:00
+                    // Сбрасываем базовую отметку времени, чтобы при вводе, например, 20:00, сразу отображалось 20:00
                     g_realStart = GetSystemTimeULongLong();
                     g_offset = desiredTotalMinutes * GAME_MINUTE_REAL_SECONDS;
                     g_lastBeepMarker = -1;
@@ -303,7 +297,7 @@ INT_PTR CALLBACK SetTimeDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
                     return (INT_PTR)TRUE;
                 }
             }
-            MessageBox(hDlg, _T("Formato de tiempo no válido. Ingrese HH:MM o HH MM"), _T("Error"), MB_OK | MB_ICONERROR);
+            MessageBox(hDlg, _T("Неверный формат времени. Введите ЧЧ:ММ или ЧЧ ММ"), _T("Ошибка"), MB_OK | MB_ICONERROR);
             return (INT_PTR)TRUE;
         }
         else if (LOWORD(wParam) == IDCANCEL)
@@ -317,7 +311,7 @@ INT_PTR CALLBACK SetTimeDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM l
 }
 
 //
-// Nuevo procedimiento de diálogo "Acerca de la aplicación"
+// Новая диалоговая процедура «О программе»
 //
 INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -325,10 +319,10 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
     switch (message)
     {
     case WM_INITDIALOG:
-        // Forzamos el tamaño de la ventana a 420x300 píxeles (en píxeles)
+        // Фиксируем размер окна 420x300 пикселей
         SetWindowPos(hDlg, NULL, 0, 0, 420, 300, SWP_NOMOVE | SWP_NOZORDER);
 
-        // Creamos la fuente de 35 para el texto "Game Clock"
+        // Создаём шрифт размера 35 для текста «Игровые часы»
         hFontGameClock = CreateFont(35, 0, 0, 0, FW_NORMAL, FALSE, FALSE, FALSE,
             DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
             DEFAULT_QUALITY, DEFAULT_PITCH | FF_SWISS, _T("MS Shell Dlg"));
@@ -340,12 +334,12 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
         LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
         if (pdis->CtlID == IDC_APPICON)
         {
-            // Cargamos el ícono del recurso IDI_CLOCK (el recurso tiene un tamaño de 110x110)
+            // Загружаем значок ресурса IDI_CLOCK (размер ресурса 110x110)
             HICON hIcon = (HICON)LoadImage(GetModuleHandle(NULL), MAKEINTRESOURCE(IDI_CLOCK),
                 IMAGE_ICON, 110, 110, LR_DEFAULTCOLOR);
             if (hIcon)
             {
-                // Escalamos el ícono a 95x95
+                // Масштабируем значок до 95x95
                 DrawIconEx(pdis->hDC, pdis->rcItem.left, pdis->rcItem.top,
                     hIcon, 95, 95, 0, NULL, DI_NORMAL);
                 DestroyIcon(hIcon);
@@ -367,7 +361,7 @@ INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 //
-// Función de actualización de fuentes con escalado dinámico
+// Функция обновления шрифтов с динамическим масштабированием
 //
 void UpdateFonts(int newHeight)
 {
@@ -404,7 +398,7 @@ void UpdateFonts(int newHeight)
 }
 
 //
-// Función para mover los controles al cambiar el tamaño de la ventana
+// Функция перемещения элементов управления при изменении размера окна
 //
 void ResizeChildControls(HWND hwnd, int newWidth, int newHeight)
 {
@@ -441,7 +435,7 @@ void ResizeChildControls(HWND hwnd, int newWidth, int newHeight)
         (int)(LAYOUT_CLIP.width * scaleX),
         (int)(LAYOUT_CLIP.height * scaleY), TRUE);
 
-    // Mover el botón "Acerca de la aplicación"
+    // Перемещение кнопки «О программе»
     MoveWindow(hAboutButton,
         (int)(LAYOUT_ABOUT.x * scaleX),
         (int)(LAYOUT_ABOUT.y * scaleY),
@@ -452,7 +446,7 @@ void ResizeChildControls(HWND hwnd, int newWidth, int newHeight)
 }
 
 //
-// Procedimiento principal de la ventana
+// Основная процедура окна
 //
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
@@ -477,17 +471,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             hwnd, NULL, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SendMessage(hTimeLabel, WM_SETFONT, (WPARAM)g_hFontLarge, TRUE);
 
-        hCountdownLabel = CreateWindowEx(0, _T("STATIC"), _T("Hasta el inicio de la montaña: 00:00"), WS_CHILD | WS_VISIBLE | SS_CENTER,
+        hCountdownLabel = CreateWindowEx(0, _T("STATIC"), _T("До начала горы: 00:00"), WS_CHILD | WS_VISIBLE | SS_CENTER,
             LAYOUT_COUNTDOWN.x, LAYOUT_COUNTDOWN.y, LAYOUT_COUNTDOWN.width, LAYOUT_COUNTDOWN.height,
             hwnd, NULL, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SendMessage(hCountdownLabel, WM_SETFONT, (WPARAM)g_hFontMedium, TRUE);
 
-        hRealCountdownLabel = CreateWindowEx(0, _T("STATIC"), _T("O en tiempo real: 0 min"), WS_CHILD | WS_VISIBLE | SS_CENTER,
+        hRealCountdownLabel = CreateWindowEx(0, _T("STATIC"), _T("Или в реальном времени: 0 мин"), WS_CHILD | WS_VISIBLE | SS_CENTER,
             LAYOUT_REALCOUNTDOWN.x, LAYOUT_REALCOUNTDOWN.y, LAYOUT_REALCOUNTDOWN.width, LAYOUT_REALCOUNTDOWN.height,
             hwnd, NULL, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SendMessage(hRealCountdownLabel, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
 
-        hSetTimeButton = CreateWindowEx(0, _T("BUTTON"), _T("Establecer el tiempo de juego"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+        hSetTimeButton = CreateWindowEx(0, _T("BUTTON"), _T("Установить игровое время"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
             LAYOUT_SETTIME.x, LAYOUT_SETTIME.y, LAYOUT_SETTIME.width, LAYOUT_SETTIME.height,
             hwnd, (HMENU)IDC_SET_TIME, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SetWindowTheme(hSetTimeButton, L"", L"");
@@ -497,13 +491,13 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             hwnd, (HMENU)IDC_CLIP, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SetWindowTheme(hClipButton, L"", L"");
 
-        // Creación del botón "Acerca de la aplicación"
-        hAboutButton = CreateWindowEx(0, _T("BUTTON"), _T("Acerca de la aplicación"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
+        // Создание кнопки «О программе»
+        hAboutButton = CreateWindowEx(0, _T("BUTTON"), _T("О программе"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
             LAYOUT_ABOUT.x, LAYOUT_ABOUT.y, LAYOUT_ABOUT.width, LAYOUT_ABOUT.height,
             hwnd, (HMENU)IDC_ABOUT, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SetWindowTheme(hAboutButton, L"", L"");
 
-        // Cargamos el tiempo de juego guardado
+        // Загружаем сохранённое игровое время
         LoadGameTime();
 
         g_realStart = GetSystemTimeULongLong();
@@ -513,9 +507,9 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             MAKEINTRESOURCE(IDR_NOTIFICATION),
             RT_RCDATA);
         if (g_notificationTempPath.empty())
-            LogMessage(L"Falló la extracción del recurso de notificación.");
+            LogMessage(L"Не удалось извлечь ресурс уведомления.");
         else
-            LogMessage(L"Recurso de notificación extraído con éxito.");
+            LogMessage(L"Ресурс уведомления успешно извлечён.");
     }
     break;
     case WM_SIZE:
@@ -543,7 +537,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             SetBkMode(pdis->hDC, TRANSPARENT);
             SetTextColor(pdis->hDC, RGB(0, 0, 0));
             RECT rc = pdis->rcItem;
-            DrawText(pdis->hDC, _T("Establecer el tiempo de juego"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawText(pdis->hDC, _T("Установить игровое время"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             return TRUE;
         }
         else if (pdis->CtlID == IDC_CLIP)
@@ -574,7 +568,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             SetBkMode(pdis->hDC, TRANSPARENT);
             SetTextColor(pdis->hDC, RGB(0, 0, 0));
             RECT rc = pdis->rcItem;
-            DrawText(pdis->hDC, _T("Acerca de la aplicación"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
+            DrawText(pdis->hDC, _T("О программе"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             return TRUE;
         }
     }
@@ -582,7 +576,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_TIMER:
     {
         ULONGLONG currentTime = GetSystemTimeULongLong();
-        double elapsed = (currentTime - g_realStart) / 10000000.0; // segundos reales
+        double elapsed = (currentTime - g_realStart) / 10000000.0; // реальные секунды
         double gameTimeTotalMinutes = (elapsed + g_offset) / GAME_MINUTE_REAL_SECONDS;
         while (gameTimeTotalMinutes < 0)
             gameTimeTotalMinutes += MINUTES_IN_DAY;
@@ -607,12 +601,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (nextMarker >= MINUTES_IN_DAY)
                 nextMarker -= MINUTES_IN_DAY;
         }
-        std::wstring countdownStr = L"Hasta el inicio de la montaña: " + FormatTime(countdownMinutes);
+        std::wstring countdownStr = L"До начала горы: " + FormatTime(countdownMinutes);
         SetWindowText(hCountdownLabel, countdownStr.c_str());
 
         double realCountdownSeconds = countdownMinutes * GAME_MINUTE_REAL_SECONDS;
         int realCountdownMinutes = (int)(realCountdownSeconds / 60);
-        std::wstring realCountdownStr = L"O en tiempo real: " + std::to_wstring(realCountdownMinutes) + L" min";
+        std::wstring realCountdownStr = L"Или в реальном времени: " + std::to_wstring(realCountdownMinutes) + L" мин";
         SetWindowText(hRealCountdownLabel, realCountdownStr.c_str());
 
         int beepTarget = (nextMarker - 10 + MINUTES_IN_DAY) % MINUTES_IN_DAY;
@@ -628,18 +622,18 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 mciSendString(_T("play mySound"), errBuffer, 128, NULL);
                 if (_tcslen(errBuffer) > 0)
                 {
-                    std::wstring errStr = _T("MCI Error: ") + std::wstring(errBuffer);
-                    MessageBox(hwnd, errStr.c_str(), _T("MCI Error"), MB_OK);
+                    std::wstring errStr = _T("Ошибка MCI: ") + std::wstring(errBuffer);
+                    MessageBox(hwnd, errStr.c_str(), _T("Ошибка MCI"), MB_OK);
                     LogMessage(errStr);
                 }
                 else
                 {
-                    LogMessage(L"Sonido reproducido con éxito.");
+                    LogMessage(L"Звук успешно воспроизведён.");
                 }
             }
             else
             {
-                LogMessage(L"La ruta del archivo de notificación está vacía. No se puede reproducir el sonido.");
+                LogMessage(L"Путь к файлу уведомления пуст. Невозможно воспроизвести звук.");
             }
             g_lastBeepMarker = nextMarker;
         }
@@ -659,7 +653,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         case IDC_SET_TIME:
             if (DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_SET_TIME), hwnd, SetTimeDlgProc) == IDOK)
             {
-                LogMessage(L"Tiempo de juego actualizado mediante el diálogo.");
+                LogMessage(L"Игровое время обновлено через диалог.");
             }
             break;
         case IDC_CLIP:
@@ -667,17 +661,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             if (g_alwaysOnTop)
             {
                 SetWindowPos(hwnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-                LogMessage(L"Siempre en primer plano habilitado.");
+                LogMessage(L"Всегда поверх включено.");
             }
             else
             {
                 SetWindowPos(hwnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
-                LogMessage(L"Siempre en primer plano deshabilitado.");
+                LogMessage(L"Всегда поверх отключено.");
             }
             InvalidateRect(hClipButton, NULL, TRUE);
             break;
         case IDC_ABOUT:
-            // Lanzar el diálogo personalizado "Acerca de la aplicación"
+            // Запуск пользовательского диалога «О программе»
             DialogBox(GetModuleHandle(NULL), MAKEINTRESOURCE(IDD_CUSTOM_ABOUTBOX), hwnd, AboutDlgProc);
             break;
         }
@@ -699,7 +693,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 }
 
 //
-// Punto de entrada en la aplicación
+// Точка входа в приложение
 //
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     _In_opt_ HINSTANCE hPrevInstance,
@@ -724,7 +718,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance,
     HWND hwnd = CreateWindowEx(
         0,
         CLASS_NAME,
-        _T("Game Clock"),
+        _T("Игровые часы"),
         WS_OVERLAPPEDWINDOW,
         CW_USEDEFAULT, CW_USEDEFAULT, BASE_WIDTH, BASE_HEIGHT,
         NULL,
