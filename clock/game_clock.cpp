@@ -168,9 +168,6 @@ std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR 
     return std::wstring(tempFileName);
 }
 
-//
-// Получение пути к INI-файлу в папке AppData пользователя
-//
 std::wstring GetIniFilePath()
 {
     TCHAR appDataPath[MAX_PATH];
@@ -183,9 +180,6 @@ std::wstring GetIniFilePath()
     return L"gameclock.ini";
 }
 
-//
-// Сохранение игрового времени в INI-файл (gameclock.ini)
-//
 void SaveGameTime()
 {
     ULONGLONG closeTime = GetSystemTimeULongLong();
