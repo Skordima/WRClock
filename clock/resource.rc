@@ -1,57 +1,34 @@
-﻿#include <windows.h>
+#include <windows.h>
 #include "Resource.h"
 
-IDI_CLOCK           ICON    "clock.ico"
-IDI_SMALL           ICON    "small.ico"
-IDR_NOTIFICATION    RCDATA  "..\gamemus.wav"
-
-
-// La inclusión de íconos y otros recursos permanece sin cambios
+IDI_CLOCK       ICON    "clock.ico"
+IDI_SMALL       ICON    "small.ico"
+IDR_NOTIFICATION RCDATA  "..\\gamemus.wav"
 
 /////////////////////////////////////////////////////////////////////////////
-//
-// Diálogo para configurar el tiempo de juego
-//
+// Диалог установки времени
+
 IDD_SET_TIME DIALOGEX 0, 0, 200, 100
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Configuración del tiempo de juego"
-FONT 8, "MS Shell Dlg"
+CAPTION "Настройка времени"
+FONT 9, "Segoe UI"
 BEGIN
-LTEXT           "Ingrese el tiempo de juego (HH:MM):", -1, 10, 10, 180, 20
-EDITTEXT        IDC_EDIT_TIME, 10, 35, 180, 20, ES_AUTOHSCROLL
-DEFPUSHBUTTON   "Aceptar", IDOK, 50, 70, 50, 14
-PUSHBUTTON      "Cancelar", IDCANCEL, 110, 70, 50, 14
+    LTEXT           "Введите игровое время (ЧЧ:ММ):", -1, 10, 10, 180, 20
+    EDITTEXT        IDC_EDIT_TIME, 10, 30, 180, 20, ES_AUTOHSCROLL | ES_CENTER
+    DEFPUSHBUTTON   "ОК", IDOK, 40, 70, 50, 14
+    PUSHBUTTON      "Отмена", IDCANCEL, 110, 70, 50, 14
 END
 
 /////////////////////////////////////////////////////////////////////////////
-//
-// Nuevo diálogo "Acerca de la aplicación" (ventana About personalizada)
-// Ventana de tamaño fijo con un ícono a la izquierda (su ícono)
-// y con texto, dividido en líneas según los requisitos
-//
-IDD_CUSTOM_ABOUTBOX DIALOGEX 0, 0, 420, 300
+// Диалог "О программе"
+
+IDD_ABOUT DIALOGEX 0, 0, 250, 120
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Acerca de la aplicación"
-FONT 10, "MS Shell Dlg"
+CAPTION "О программе"
+FONT 9, "Segoe UI"
 BEGIN
-// Control de dibujo personalizado para el ícono de la aplicación (será dibujado programáticamente)
-CONTROL "", IDC_APPICON, "Button", BS_OWNERDRAW | WS_CHILD | WS_VISIBLE, 10, 10, 95, 95
-
-// Objeto estático separado a la derecha del ícono – la etiqueta "Game Clock"
-LTEXT "Game Clock", IDC_GAMECLOCK, 90, 25, 290, 40, SS_LEFT
-
-// Debajo – texto "Información sobre el producto."
-LTEXT "Información sobre el producto.", -1, 5, 65, 100, 10, SS_LEFT
-
-// Grupo (marco) para la tabla – se define el título como un espacio para que se dibuje el marco
-GROUPBOX " ", -1, 5, 70, 192, 33
-
-// Tabla de dos columnas
-// Columna izquierda – alineación a la derecha
-LTEXT "Producto:\r\nVersión:\r\nFecha de compilación:", -1, 20, 76, 70, 26, SS_RIGHT
-// Columna derecha – alineación a la izquierda
-LTEXT "Game Clock\r\n1.0\r\n11.03.2025", -1, 110, 76, 50, 26, SS_LEFT
-
-// En la parte inferior – información sobre el desarrollo
-LTEXT "Desarrollado por el equipo SkorTeam\r\nEspecialmente para la comunidad Warriors - Stay out", -1, 5, 110, 200, 90, SS_LEFT
+    CONTROL "", IDC_APPICON, "STATIC", SS_ICON | WS_CHILD | WS_VISIBLE, 10, 10, 32, 32
+    LTEXT   "Игровые часы", IDC_ABOUT_TEXT, 50, 15, 190, 20
+    DEFPUSHBUTTON "Закрыть", IDOK, 90, 80, 70, 14
 END
+
