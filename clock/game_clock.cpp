@@ -3,15 +3,19 @@
 #include <dwmapi.h>
 #include <uxtheme.h>
 #include <mmsystem.h>
+#include <shlobj.h>
+#include <algorithm>
+#include <cmath>
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <fstream>
-#include "resource.h"
+#include "Resource.h"
 
 #pragma comment(lib, "dwmapi.lib")
 #pragma comment(lib, "uxtheme.lib")
 #pragma comment(lib, "winmm.lib")
+#pragma comment(lib, "shell32.lib")
 
 // Declaraciones previas de funciones
 void UpdateFonts(int newHeight);
@@ -165,6 +169,21 @@ std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR 
 }
 
 //
+// Obtiene la ruta al archivo INI dentro de la carpeta AppData del usuario
+//
+std::wstring GetIniFilePath()
+{
+    TCHAR appDataPath[MAX_PATH];
+    if (SUCCEEDED(SHGetFolderPath(NULL, CSIDL_APPDATA | CSIDL_FLAG_CREATE, NULL, 0, appDataPath)))
+    {
+        std::wstring folder = std::wstring(appDataPath) + L"\\WRClock";
+        CreateDirectory(folder.c_str(), NULL);
+        return folder + L"\\gameclock.ini";
+    }
+    return L"gameclock.ini";
+}
+
+//
 // Guardar el tiempo de juego en el archivo INI (gameclock.ini)
 //
 void SaveGameTime()
@@ -176,10 +195,11 @@ void SaveGameTime()
 
     TCHAR buffer[64];
     _stprintf_s(buffer, _T("%d"), gameTimeInt);
-    WritePrivateProfileString(_T("Game"), _T("GameTime"), buffer, _T("gameclock.ini"));
+    std::wstring iniPath = GetIniFilePath();
+    WritePrivateProfileString(_T("Game"), _T("GameTime"), buffer, iniPath.c_str());
 
     _stprintf_s(buffer, _T("%I64u"), closeTime);
-    WritePrivateProfileString(_T("Game"), _T("CloseTime"), buffer, _T("gameclock.ini"));
+    WritePrivateProfileString(_T("Game"), _T("CloseTime"), buffer, iniPath.c_str());
 
     LogMessage(L"Tiempo de juego guardado.");
 }
@@ -192,11 +212,12 @@ void LoadGameTime()
     TCHAR buffer[64] = { 0 };
     int storedGameTime = 0;
     ULONGLONG storedCloseTime = 0;
-    if (GetPrivateProfileString(_T("Game"), _T("GameTime"), _T(""), buffer, 64, _T("gameclock.ini")) > 0)
+    std::wstring iniPath = GetIniFilePath();
+    if (GetPrivateProfileString(_T("Game"), _T("GameTime"), _T(""), buffer, 64, iniPath.c_str()) > 0)
     {
         storedGameTime = _ttoi(buffer);
     }
-    if (GetPrivateProfileString(_T("Game"), _T("CloseTime"), _T(""), buffer, 64, _T("gameclock.ini")) > 0)
+    if (GetPrivateProfileString(_T("Game"), _T("CloseTime"), _T(""), buffer, 64, iniPath.c_str()) > 0)
     {
         storedCloseTime = _ttoi64(buffer);
     }
@@ -352,9 +373,9 @@ void UpdateFonts(int newHeight)
 {
     const int baseLarge = 36, baseMedium = 24, baseSmall = 18;
     double scaleY = (double)newHeight / BASE_HEIGHT;
-    int newLarge = max(1, (int)(baseLarge * scaleY));
-    int newMedium = max(1, (int)(baseMedium * scaleY));
-    int newSmall = max(1, (int)(baseSmall * scaleY));
+    int newLarge = std::max(1, (int)(baseLarge * scaleY));
+    int newMedium = std::max(1, (int)(baseMedium * scaleY));
+    int newSmall = std::max(1, (int)(baseSmall * scaleY));
 
     HFONT hFontLargeNew = CreateFont(newLarge, 0, 0, 0, FW_BOLD, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_OUTLINE_PRECIS, CLIP_DEFAULT_PRECIS,
@@ -565,7 +586,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         double gameTimeTotalMinutes = (elapsed + g_offset) / GAME_MINUTE_REAL_SECONDS;
         while (gameTimeTotalMinutes < 0)
             gameTimeTotalMinutes += MINUTES_IN_DAY;
-        gameTimeTotalMinutes = fmod(gameTimeTotalMinutes, MINUTES_IN_DAY);
+        gameTimeTotalMinutes = std::fmod(gameTimeTotalMinutes, MINUTES_IN_DAY);
 
         int totalMinutes = (int)gameTimeTotalMinutes;
         std::wstring gameTimeStr = FormatTime(totalMinutes);
