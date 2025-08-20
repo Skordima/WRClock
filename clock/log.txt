@@ -1,0 +1,41 @@
+2025-3-11 18:42:59: Loaded game time from INI settings.
+2025-3-11 18:42:59: FindResource failed
+2025-3-11 18:42:59: Notification resource extraction failed.
+2025-3-11 18:43:5: Game time saved.
+2025-3-11 18:43:5: Game time updated via dialog.
+2025-3-11 18:43:14: Notification file path is empty. Cannot play sound.
+2025-3-11 18:43:20: Game time saved.
+2025-3-11 18:45:8: Loaded game time from INI settings.
+2025-3-11 18:45:8: FindResource failed
+2025-3-11 18:45:8: Notification resource extraction failed.
+2025-3-11 18:45:11: Game time saved.
+2025-3-11 18:45:57: Loaded game time from INI settings.
+2025-3-11 18:45:57: Resource extracted to C:\Temp\WAV63C3.tmp
+2025-3-11 18:45:57: Notification resource extracted successfully.
+2025-3-11 18:46:3: Game time saved.
+2025-3-11 18:46:3: Game time updated via dialog.
+2025-3-11 18:46:12: Sound played successfully.
+2025-3-11 18:46:34: Game time saved.
+2025-3-11 18:46:34: Game time updated via dialog.
+2025-3-11 18:46:45: Always on top enabled.
+2025-3-11 18:55:1: Game time saved.
+2025-3-11 18:55:12: Loaded game time from INI settings.
+2025-3-11 18:55:12: Resource extracted to C:\Temp\WAVDAF0.tmp
+2025-3-11 18:55:12: Notification resource extracted successfully.
+2025-3-11 18:55:15: Game time saved.
+2025-3-11 18:55:34: Loaded game time from INI settings.
+2025-3-11 18:55:34: Resource extracted to C:\Temp\WAV32A5.tmp
+2025-3-11 18:55:34: Notification resource extracted successfully.
+2025-3-11 18:55:36: Game time saved.
+2025-3-11 19:2:57: Loaded game time from INI settings.
+2025-3-11 19:2:57: Resource extracted to C:\Temp\WAVF5A9.tmp
+2025-3-11 19:2:57: Notification resource extracted successfully.
+2025-3-11 19:3:8: Game time saved.
+2025-3-11 19:3:33: Loaded game time from INI settings.
+2025-3-11 19:3:33: Resource extracted to C:\Temp\WAV8111.tmp
+2025-3-11 19:3:33: Notification resource extracted successfully.
+2025-3-11 19:3:39: Game time saved.
+2025-3-11 19:3:47: Loaded game time from INI settings.
+2025-3-11 19:3:47: Resource extracted to C:\Temp\WAVB782.tmp
+2025-3-11 19:3:47: Notification resource extracted successfully.
+2025-3-11 19:3:49: Game time saved.
