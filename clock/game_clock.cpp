@@ -1,4 +1,5 @@
-﻿#include <windows.h>
+#define NOMINMAX
+#include <windows.h>
 #include <tchar.h>
 #include <dwmapi.h>
 #include <uxtheme.h>
@@ -53,11 +54,11 @@ const ControlLayout LAYOUT_REALCOUNTDOWN = { 10, 115, 230, 20 };
 const ControlLayout LAYOUT_SETTIME = { 10, 145, 230, 25 };
 const ControlLayout LAYOUT_CLIP = { BASE_WIDTH - 35, 5, 30, 30 };
 const ControlLayout LAYOUT_THEME = { 10, 5, 120, 26 };
-// Размещение кнопки «О программе»
 const ControlLayout LAYOUT_ABOUT = { 10, 180, 230, 25 };
 
 // Глобальные переменные элементов управления
 HWND hTimeLabel, hCountdownLabel, hRealCountdownLabel, hSetTimeButton, hClipButton, hAboutButton, hThemeSwitch;
+HWND hTimeLabel, hCountdownLabel, hRealCountdownLabel, hSetTimeButton, hClipButton, hAboutButton;
 double g_offset = 0.0;       // смещение в секундах для расчёта игрового времени
 ULONGLONG g_realStart = 0;   // момент запуска (в единицах 100 нс)
 int g_lastBeepMarker = -1;
@@ -172,9 +173,11 @@ std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR 
     return std::wstring(tempFileName);
 }
 
+
 //
 // Получение пути к INI-файлу в папке AppData пользователя
 //
+
 std::wstring GetIniFilePath()
 {
     TCHAR appDataPath[MAX_PATH];
@@ -187,9 +190,11 @@ std::wstring GetIniFilePath()
     return L"gameclock.ini";
 }
 
+
 //
 // Сохранение игрового времени в INI-файл (gameclock.ini)
 //
+
 void SaveGameTime()
 {
     ULONGLONG closeTime = GetSystemTimeULongLong();
@@ -459,6 +464,7 @@ void ResizeChildControls(HWND hwnd, int newWidth, int newHeight)
         (int)(LAYOUT_CLIP.width * scaleX),
         (int)(LAYOUT_CLIP.height * scaleY), TRUE);
 
+
     MoveWindow(hThemeSwitch,
         (int)(LAYOUT_THEME.x * scaleX),
         (int)(LAYOUT_THEME.y * scaleY),
@@ -520,6 +526,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             LAYOUT_CLIP.x, LAYOUT_CLIP.y, LAYOUT_CLIP.width, LAYOUT_CLIP.height,
             hwnd, (HMENU)IDC_CLIP, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SetWindowTheme(hClipButton, L"", L"");
+
 
         hThemeSwitch = CreateWindowEx(0, L"BUTTON", L"Тёмная тема",
             WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
