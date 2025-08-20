@@ -1,4 +1,5 @@
-﻿#include <windows.h>
+﻿#define NOMINMAX
+#include <windows.h>
 #include <tchar.h>
 #include <dwmapi.h>
 #include <uxtheme.h>
