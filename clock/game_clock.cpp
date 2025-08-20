@@ -1,4 +1,5 @@
-﻿#include <windows.h>
+#define NOMINMAX
+#include <windows.h>
 #include <tchar.h>
 #include <dwmapi.h>
 #include <uxtheme.h>
@@ -20,6 +21,7 @@
 // Предварительные объявления функций
 void UpdateFonts(int newHeight);
 void ResizeChildControls(HWND hwnd, int newWidth, int newHeight);
+void ApplyTheme(HWND hwnd);
 INT_PTR CALLBACK SetTimeDlgProc(HWND, UINT, WPARAM, LPARAM);
 INT_PTR CALLBACK AboutDlgProc(HWND, UINT, WPARAM, LPARAM); // новая процедура диалога «О программе»
 ULONGLONG GetSystemTimeULongLong();
@@ -28,6 +30,7 @@ ULONGLONG GetSystemTimeULongLong();
 #define IDT_TIMER       1
 #define IDC_SET_TIME    101
 #define IDC_CLIP        102
+#define IDC_THEME_SWITCH 110
 
 // Константы преобразования времени:
 // 1 игровая минута = 8.75 секунд реального времени
@@ -50,15 +53,17 @@ const ControlLayout LAYOUT_COUNTDOWN = { 10, 90, 235, 20 };
 const ControlLayout LAYOUT_REALCOUNTDOWN = { 10, 115, 230, 20 };
 const ControlLayout LAYOUT_SETTIME = { 10, 145, 230, 25 };
 const ControlLayout LAYOUT_CLIP = { BASE_WIDTH - 35, 5, 30, 30 };
-// Размещение кнопки «О программе»
+const ControlLayout LAYOUT_THEME = { 10, 5, 120, 26 };
 const ControlLayout LAYOUT_ABOUT = { 10, 180, 230, 25 };
 
 // Глобальные переменные элементов управления
+HWND hTimeLabel, hCountdownLabel, hRealCountdownLabel, hSetTimeButton, hClipButton, hAboutButton, hThemeSwitch;
 HWND hTimeLabel, hCountdownLabel, hRealCountdownLabel, hSetTimeButton, hClipButton, hAboutButton;
 double g_offset = 0.0;       // смещение в секундах для расчёта игрового времени
 ULONGLONG g_realStart = 0;   // момент запуска (в единицах 100 нс)
 int g_lastBeepMarker = -1;
 bool g_alwaysOnTop = false;
+bool g_darkTheme = false;
 
 // Глобальные кисти и шрифты
 HBRUSH hBrushBackground = NULL;
@@ -168,6 +173,11 @@ std::wstring ExtractResourceToTempFile(HINSTANCE hInst, LPCTSTR lpName, LPCTSTR 
     return std::wstring(tempFileName);
 }
 
+
+//
+// Получение пути к INI-файлу в папке AppData пользователя
+//
+
 std::wstring GetIniFilePath()
 {
     TCHAR appDataPath[MAX_PATH];
@@ -179,6 +189,11 @@ std::wstring GetIniFilePath()
     }
     return L"gameclock.ini";
 }
+
+
+//
+// Сохранение игрового времени в INI-файл (gameclock.ini)
+//
 
 void SaveGameTime()
 {
@@ -234,6 +249,19 @@ void LoadGameTime()
         g_offset = sysMinutes * GAME_MINUTE_REAL_SECONDS;
         LogMessage(L"Сохранённое игровое время не найдено; используется системное время.");
     }
+}
+
+//
+// Применение выбранной темы (тёмной или светлой)
+//
+void ApplyTheme(HWND hwnd)
+{
+    if (hBrushBackground)
+        DeleteObject(hBrushBackground);
+
+    COLORREF bg = g_darkTheme ? RGB(32, 32, 32) : RGB(245, 245, 245);
+    hBrushBackground = CreateSolidBrush(bg);
+    InvalidateRect(hwnd, NULL, TRUE);
 }
 
 //
@@ -387,6 +415,7 @@ void UpdateFonts(int newHeight)
     SendMessage(hSetTimeButton, WM_SETFONT, (WPARAM)hFontSmallNew, TRUE);
     SendMessage(hClipButton, WM_SETFONT, (WPARAM)hFontSmallNew, TRUE);
     SendMessage(hAboutButton, WM_SETFONT, (WPARAM)hFontSmallNew, TRUE);
+    SendMessage(hThemeSwitch, WM_SETFONT, (WPARAM)hFontSmallNew, TRUE);
 
     if (g_hFontLarge) DeleteObject(g_hFontLarge);
     if (g_hFontMedium) DeleteObject(g_hFontMedium);
@@ -434,6 +463,13 @@ void ResizeChildControls(HWND hwnd, int newWidth, int newHeight)
         (int)(LAYOUT_CLIP.y * scaleY),
         (int)(LAYOUT_CLIP.width * scaleX),
         (int)(LAYOUT_CLIP.height * scaleY), TRUE);
+
+
+    MoveWindow(hThemeSwitch,
+        (int)(LAYOUT_THEME.x * scaleX),
+        (int)(LAYOUT_THEME.y * scaleY),
+        (int)(LAYOUT_THEME.width * scaleX),
+        (int)(LAYOUT_THEME.height * scaleY), TRUE);
 
     // Перемещение кнопки «О программе»
     MoveWindow(hAboutButton,
@@ -491,6 +527,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             hwnd, (HMENU)IDC_CLIP, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
         SetWindowTheme(hClipButton, L"", L"");
 
+
+        hThemeSwitch = CreateWindowEx(0, L"BUTTON", L"Тёмная тема",
+            WS_CHILD | WS_VISIBLE | BS_AUTOCHECKBOX,
+            LAYOUT_THEME.x, LAYOUT_THEME.y, LAYOUT_THEME.width, LAYOUT_THEME.height,
+            hwnd, (HMENU)IDC_THEME_SWITCH, ((LPCREATESTRUCT)lParam)->hInstance, NULL);
+        SetWindowTheme(hThemeSwitch, L"Switch", NULL);
+        SendMessage(hThemeSwitch, BM_SETCHECK, g_darkTheme ? BST_CHECKED : BST_UNCHECKED, 0);
+        SendMessage(hThemeSwitch, WM_SETFONT, (WPARAM)g_hFontSmall, TRUE);
+
         // Создание кнопки «О программе»
         hAboutButton = CreateWindowEx(0, _T("BUTTON"), _T("О программе"), WS_CHILD | WS_VISIBLE | BS_OWNERDRAW,
             LAYOUT_ABOUT.x, LAYOUT_ABOUT.y, LAYOUT_ABOUT.width, LAYOUT_ABOUT.height,
@@ -502,6 +547,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 
         g_realStart = GetSystemTimeULongLong();
         SetTimer(hwnd, IDT_TIMER, 200, NULL);
+
+        ApplyTheme(hwnd);
 
         g_notificationTempPath = ExtractResourceToTempFile(((LPCREATESTRUCT)lParam)->hInstance,
             MAKEINTRESOURCE(IDR_NOTIFICATION),
@@ -524,7 +571,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
         LPDRAWITEMSTRUCT pdis = (LPDRAWITEMSTRUCT)lParam;
         if (pdis->CtlID == IDC_SET_TIME)
         {
-            HBRUSH hAccentBrush = CreateSolidBrush(RGB(41, 121, 255));
+            COLORREF accent = g_darkTheme ? RGB(10, 132, 255) : RGB(41, 121, 255);
+            HBRUSH hAccentBrush = CreateSolidBrush(accent);
             FillRect(pdis->hDC, &pdis->rcItem, hAccentBrush);
             DeleteObject(hAccentBrush);
 
@@ -535,27 +583,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             DeleteObject(hPen);
 
             SetBkMode(pdis->hDC, TRANSPARENT);
-            SetTextColor(pdis->hDC, RGB(0, 0, 0));
+            SetTextColor(pdis->hDC, RGB(255, 255, 255));
             RECT rc = pdis->rcItem;
             DrawText(pdis->hDC, _T("Установить игровое время"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             return TRUE;
         }
         else if (pdis->CtlID == IDC_CLIP)
         {
-            COLORREF bgColor = g_alwaysOnTop ? RGB(200, 200, 200) : RGB(245, 245, 245);
+            COLORREF bgColor = g_alwaysOnTop ? (g_darkTheme ? RGB(90, 90, 90) : RGB(200, 200, 200))
+                                            : (g_darkTheme ? RGB(60, 60, 60) : RGB(245, 245, 245));
             HBRUSH hBrush = CreateSolidBrush(bgColor);
             FillRect(pdis->hDC, &pdis->rcItem, hBrush);
             DeleteObject(hBrush);
 
             SetBkMode(pdis->hDC, TRANSPARENT);
-            SetTextColor(pdis->hDC, RGB(0, 0, 0));
+            SetTextColor(pdis->hDC, g_darkTheme ? RGB(255, 255, 255) : RGB(0, 0, 0));
             RECT rc = pdis->rcItem;
             DrawText(pdis->hDC, _T("📌"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             return TRUE;
         }
         else if (pdis->CtlID == IDC_ABOUT)
         {
-            HBRUSH hAccentBrush = CreateSolidBrush(RGB(41, 121, 255));
+            COLORREF accent = g_darkTheme ? RGB(10, 132, 255) : RGB(41, 121, 255);
+            HBRUSH hAccentBrush = CreateSolidBrush(accent);
             FillRect(pdis->hDC, &pdis->rcItem, hAccentBrush);
             DeleteObject(hAccentBrush);
 
@@ -566,7 +616,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
             DeleteObject(hPen);
 
             SetBkMode(pdis->hDC, TRANSPARENT);
-            SetTextColor(pdis->hDC, RGB(0, 0, 0));
+            SetTextColor(pdis->hDC, RGB(255, 255, 255));
             RECT rc = pdis->rcItem;
             DrawText(pdis->hDC, _T("О программе"), -1, &rc, DT_CENTER | DT_VCENTER | DT_SINGLELINE);
             return TRUE;
@@ -642,8 +692,15 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
     case WM_CTLCOLORSTATIC:
     {
         HDC hdcStatic = (HDC)wParam;
-        SetTextColor(hdcStatic, RGB(0, 0, 0));
-        SetBkColor(hdcStatic, RGB(245, 245, 245));
+        SetTextColor(hdcStatic, g_darkTheme ? RGB(255, 255, 255) : RGB(0, 0, 0));
+        SetBkColor(hdcStatic, g_darkTheme ? RGB(32, 32, 32) : RGB(245, 245, 245));
+        return (LRESULT)hBrushBackground;
+    }
+    case WM_CTLCOLORBTN:
+    {
+        HDC hdcBtn = (HDC)wParam;
+        SetTextColor(hdcBtn, g_darkTheme ? RGB(255, 255, 255) : RGB(0, 0, 0));
+        SetBkColor(hdcBtn, g_darkTheme ? RGB(32, 32, 32) : RGB(245, 245, 245));
         return (LRESULT)hBrushBackground;
     }
     case WM_COMMAND:
@@ -669,6 +726,10 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
                 LogMessage(L"Всегда поверх отключено.");
             }
             InvalidateRect(hClipButton, NULL, TRUE);
+            break;
+        case IDC_THEME_SWITCH:
+            g_darkTheme = (SendMessage(hThemeSwitch, BM_GETCHECK, 0, 0) == BST_CHECKED);
+            ApplyTheme(hwnd);
             break;
         case IDC_ABOUT:
             // Запуск пользовательского диалога «О программе»
